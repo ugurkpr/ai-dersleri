@@ -97,6 +97,10 @@ html,body,button,a,input,textarea,label,.node,[role="button"]{touch-action:manip
 .li .si svg{width:11px;height:11px}
 .li.st-pub .si{border:2px solid var(--mc)}
 .li.st-done .si{background:var(--good);color:var(--surface)}
+.li .si[data-tick]{cursor:pointer;position:relative;transition:transform .15s,background .15s}
+.li .si[data-tick]::before{content:"";position:absolute;inset:-7px}
+.li .si[data-tick]:hover{transform:scale(1.15)}
+.li.st-pub .si[data-tick]:hover{background:color-mix(in srgb,var(--mc) 22%,transparent)}
 .li.st-up{color:var(--muted)}
 .li.st-up .si{border:1.5px dashed var(--faint);color:var(--faint)}
 .li.st-up .si svg{width:10px;height:10px}
@@ -1321,7 +1325,7 @@ function renderNav() {
       let t = esc(o.title); if (q) t = hl(t, q);
       const bd = (o.isNew ? `<span class="newb" title="Güncel gelişmelerden eklendi">Yeni</span>` : "") + (o.L ? lvlDot(o.L.level) : "");
       const icon = st === "done" ? svg("check", 3.4) : st === "up" ? svg("clock", 2.4) : "";
-      html += `<li><a class="li st-${st}${cur ? " cur" : ""}" href="${itemHref(o)}"${st === "up" ? ` title="Yakında · tahmini ${eta(o.up)}"` : ""}><span class="si">${icon}</span><span>${t}${bd}</span><span class="ln">${o.n ? o.n : ""}</span></a></li>`;
+      html += `<li><a class="li st-${st}${cur ? " cur" : ""}" href="${itemHref(o)}"${st === "up" ? ` title="Yakında · tahmini ${eta(o.up)}"` : ""}><span class="si"${o.n ? ` data-tick="${o.n}" role="checkbox" aria-checked="${st === "done"}" title="${st === "done" ? "Tamamlandı işaretini kaldır" : "Tamamlandı olarak işaretle"}"` : ""}>${icon}</span><span>${t}${bd}</span><span class="ln">${o.n ? o.n : ""}</span></a></li>`;
     }
     html += `</ul></div>`;
   }
@@ -1330,7 +1334,7 @@ function renderNav() {
   if (cur && !q) { const side = $("#side"), r = cur.getBoundingClientRect(), sr = side.getBoundingClientRect(); if (r.top < sr.top || r.bottom > sr.bottom) side.scrollTop += r.top - sr.top - sr.height / 2; }
 }
 function hl(html, q) { if (!q) return html; return html.replace(new RegExp(`(${esc(q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"), '<mark class="hit">$1</mark>'); }
-$("#nav").addEventListener("click", e => { const b = e.target.closest(".mod-h"); if (!b) return; const m = b.closest(".mod"); const o = m.dataset.open !== "true"; m.dataset.open = o; b.setAttribute("aria-expanded", o); navOpen[b.dataset.mod] = o; });
+$("#nav").addEventListener("click", e => { const tk = e.target.closest("[data-tick]"); if (tk) { e.preventDefault(); e.stopPropagation(); const n = +tk.dataset.tick; S.prog.done = S.prog.done || {}; if (isDone(n)) { delete S.prog.done[n]; saveProg(); } else { S.prog.done[n] = true; act(); } refreshProgUI(); return; } const b = e.target.closest(".mod-h"); if (!b) return; const m = b.closest(".mod"); const o = m.dataset.open !== "true"; m.dataset.open = o; b.setAttribute("aria-expanded", o); navOpen[b.dataset.mod] = o; });
 $("#q").addEventListener("input", e => { S.q = e.target.value; renderNav(); });
 $("#menuBtn").addEventListener("click", () => document.body.classList.toggle("nav"));
 $("#backBtn").addEventListener("click", () => { document.body.classList.remove("nav"); if (navStack.length > 1) history.back(); else { navReplace = true; location.replace(parentHash()); } });
